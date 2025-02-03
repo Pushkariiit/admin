@@ -84,9 +84,9 @@ const CategorySettings = () => {
                 },
               }}
             >
-              <ToggleButton value="Low">Low</ToggleButton>
+              {/* <ToggleButton value="Low">Low</ToggleButton> */}
               <ToggleButton value="Normal">Normal</ToggleButton>
-              <ToggleButton value="High">High</ToggleButton>
+              {/* <ToggleButton value="High">High</ToggleButton> */}
             </ToggleButtonGroup>
           </Grid>
         </Grid>

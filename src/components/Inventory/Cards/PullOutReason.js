@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Grid,
@@ -6,11 +6,90 @@ import {
   Typography,
   TextField,
   Button,
+  CircularProgress,
 } from '@mui/material';
 
 const PullOutReason = () => {
   const [reason, setReason] = useState('');
   const [category, setCategory] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+
+        if (!token) {
+          throw new Error("No authentication token found.");
+        }
+
+        const response = await fetch("http://localhost:8000/api/v1/shopify/all-products-category", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("Fetched Categories:", result);
+
+        const collections = result.data?.collections;
+        if (collections && typeof collections === "object") {
+          const categoriesArray = Object.entries(collections).flatMap(([key, items]) =>
+            items.map(item => ({
+              id: item.id,
+              title: item.name || key,
+            }))
+          );
+
+          setCategories(categoriesArray);
+        } else {
+          throw new Error("Invalid data format: 'collections' is not an object.");
+        }
+
+        setLoading(false);
+      } catch (err) {
+        console.error("Fetch error:", err.message);
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const handleReasonApply = () => {
+    // Add logic for applying reason
+    console.log("Selected Reason:", reason);
+  };
+
+  const handleCategoryApply = () => {
+    // Add logic for applying category
+    console.log("Selected Category:", category);
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="200px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="200px">
+        <Typography color="error">Error: {error}</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box mt={1}>
@@ -23,8 +102,8 @@ const PullOutReason = () => {
         }}
       >
         <Typography
-         color="#344767"
-          sx={{ fontFamily: ' sans-serif', fontSize: '18px', marginBottom: '20px', fontWeight: 'bold' }}
+          color="#344767"
+          sx={{ fontFamily: 'sans-serif', fontSize: '18px', marginBottom: '20px', fontWeight: 'bold' }}
         >
           Pull out NeyX
         </Typography>
@@ -52,11 +131,12 @@ const PullOutReason = () => {
                     Reasons for pulling Out
                   </option>
                   <option value="Reason 1">Reason 1</option>
-                  <option value="Shirts">Shirts</option>
-                  <option value="Jeans">Jeans</option>
+                  <option value="Reason 2">Reason 2</option>
+                  <option value="Reason 3">Reason 3</option>
                 </TextField>
                 <Button
                   variant="contained"
+                  onClick={handleReasonApply}
                   sx={{
                     backgroundColor: '#000',
                     color: '#fff',
@@ -64,7 +144,7 @@ const PullOutReason = () => {
                     '&:hover': {
                       backgroundColor: '#333',
                     },
-                    height: '100%', // Automatically adjust to match the TextField
+                    height: '100%',
                     width: '120px',
                     padding: '16px',
                   }}
@@ -74,7 +154,6 @@ const PullOutReason = () => {
               </Box>
             </Box>
           </Grid>
-
 
           {/* For Selected Categories */}
           <Grid item xs={12} md={6}>
@@ -98,12 +177,15 @@ const PullOutReason = () => {
                   <option value="" disabled>
                     Select category
                   </option>
-                  <option value="Shoes">Shoes</option>
-                  <option value="Shirts">Shirts</option>
-                  <option value="Jeans">Jeans</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.title}>
+                      {cat.title}
+                    </option>
+                  ))}
                 </TextField>
                 <Button
                   variant="contained"
+                  onClick={handleCategoryApply}
                   sx={{
                     backgroundColor: '#000',
                     color: '#fff',
